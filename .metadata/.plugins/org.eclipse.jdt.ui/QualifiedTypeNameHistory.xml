@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+<fullyQualifiedTypeName name="org.apache.commons.lang.StringUtils"/>
+<fullyQualifiedTypeName name="org.apache.commons.lang.ArrayUtils"/>
+<fullyQualifiedTypeName name="java.util.ArrayList"/>
+<fullyQualifiedTypeName name="com.uc4.api.Template"/>
+<fullyQualifiedTypeName name="com.uc4.api.objects.Variable"/>
+<fullyQualifiedTypeName name="com.uc4.api.objects.VariableValues"/>
+</qualifiedTypeNameHistroy>

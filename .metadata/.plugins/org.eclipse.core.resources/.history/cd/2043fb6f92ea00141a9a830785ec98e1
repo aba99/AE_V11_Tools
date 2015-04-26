@@ -1,0 +1,159 @@
+package com.automic.api;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+
+import au.com.bytecode.opencsv.CSVReader;
+
+import com.uc4.api.Template;
+import com.uc4.api.UC4ObjectName;
+import com.uc4.api.objects.IFolder;
+import com.uc4.api.objects.UC4Object;
+import com.uc4.api.objects.Variable;
+
+
+
+
+public class DeleteFolder {
+
+	static HashMap<String,CSVLine> hostList = new HashMap<String,CSVLine>();
+	static String folderConn ="AGENT_DEPLOYMENT/CONN";
+	static String folderVara ="AGENT_DEPLOYMENT/VARA";
+	static String defaultCONNFTP="CONN.FTPAGENT.FTPCONNECTION";
+	static String defaultVARA ="VARA.HOSTS.INFO";
+		
+	public static void main(String argv[]) throws IOException {
+			
+			String configFile = argv[0];
+			String csvFile = argv[1];
+			
+			String defaultFtpConObjName =defaultCONNFTP;
+			
+			if(argv.length>=3)
+			{
+				defaultFtpConObjName= argv[2];
+			}
+			
+			
+			AEConnector conn = new AEConnector(configFile);
+			AeConnection ae = conn.getAeConnection();
+			
+			readCSV(csvFile);
+			/*if(!ae.isFound(defaultFtpConObjName))	
+			{
+				System.out.print(defaultFtpConObjName+" does not exist");
+				System.exit(-1);
+			}*/
+			
+			ae.createFolder(folderConn);
+			IFolder fld_conn = ae.getFolder(folderConn);
+			
+			ae.createFolder(folderVara);
+			IFolder fld_vara = ae.getFolder(folderVara);
+
+			ae.deleteObject(defaultVARA);//deletes if it finds it
+			UC4Object varaObj =ae.createAndOpenObject(defaultVARA,fld_vara, Template.VARA);
+			Variable var = (Variable)varaObj;
+			var.attributes().setDataTypeCharacter();
+			
+			for(String host:hostList.keySet())
+			{
+				String vhost=	AeStringUtils.makeAeValid(host);
+				ae.deleteObject("CONN.FTP."+vhost);//deletes if it finds it
+				
+				if(!hostList.get(host).getOS().toUpperCase().contains("WIN"))
+				{
+
+					if(!ae.isFound(defaultFtpConObjName))	
+					{
+						System.out.print(defaultFtpConObjName+" does not exist");
+						System.exit(-1);
+					}
+					
+						UC4Object obj_dup = ae.duplicateAndOpenObject(defaultFtpConObjName, "CONN.FTP."+	vhost, fld_conn);
+						ae.saveAndCloseObject(obj_dup);
+						ae.openAndEditAndSaveAndCloseConnectionObject(new UC4ObjectName("CONN.FTP."+	vhost)
+							,hostList.get(host).getUser() 
+							,hostList.get(host).getPassword()
+							,hostList.get(host).getHostname()
+							,hostList.get(host).getPort()
+							,hostList.get(host).getProtocol());
+						
+						
+						
+						var.add(hostList.get(host).getHostname()
+								, hostList.get(host).getOS() 
+								, hostList.get(host).getUser() 
+								, hostList.get(host).getPassword()
+								,hostList.get(host).getUsrGrp()
+								,"CONN.FTP."+vhost
+								);
+						
+						
+				}
+				
+				else{
+				var.add(hostList.get(host).getHostname()
+							, hostList.get(host).getOS() 
+							, hostList.get(host).getUser() 
+							, hostList.get(host).getPassword()
+							,hostList.get(host).getUsrGrp()
+							,""
+							);}
+							
+			}
+			ae.saveAndCloseObject(var);
+			ae.saveAndCloseObject(varaObj);
+			ae.close();
+
+
+		}
+		
+	
+	private static void readCSV(String csvFile){
+		try{
+		@SuppressWarnings("resource")
+		CSVReader reader = new CSVReader(new FileReader(csvFile),',', '\"', '\0');
+		
+		String [] line;
+		boolean firstLine = true;
+		
+		//parse lines
+	    while ((line = reader.readNext()) != null) 
+	    {
+	    	//skip first line
+	    	if (firstLine) {
+	    		firstLine = false;
+	    		continue;
+	    	}
+	    	
+	    	if (line.length<7)
+	    		continue;
+	    	
+	    	String hostname = line[0].trim();
+	    	
+	    	String os=line[1].trim();
+
+	    	String user = line[2].trim();
+	    	String pwd = line[3].trim();
+	    	String userGrp  =line[4].trim();
+	    	String protocol = line[5].trim();
+	    	String port = line[6].trim();
+
+
+	    	CSVLine cParam = new CSVLine(hostname,os,user,pwd,userGrp,protocol,port);
+	    	
+	    	if(!hostList.containsKey(hostname))
+	    	{
+	    		hostList.put(hostname, cParam);
+	    	}
+		} 
+	    
+	}
+	catch (Exception e)
+	{
+		System.out.println("Reading CSV file error !");
+		System.exit(1);
+	}
+}
+	}

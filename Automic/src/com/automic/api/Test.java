@@ -1,0 +1,44 @@
+package com.automic.api;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+
+import au.com.bytecode.opencsv.CSVReader;
+
+import com.uc4.api.Template;
+import com.uc4.api.UC4ObjectName;
+import com.uc4.api.objects.IFolder;
+import com.uc4.api.objects.UC4Object;
+import com.uc4.api.objects.Variable;
+
+
+
+
+public class Test {
+
+
+		
+	public static void main(String argv[]) throws IOException {
+			
+			String configFile = argv[0];
+			String folderPath = argv[1];
+			
+			
+			AEConnector conn = new AEConnector(configFile);
+			AeConnection ae = conn.getAeConnection();
+			
+		
+		
+		
+			ae.createFolder(folderPath);
+			IFolder fld = ae.getFolder(folderPath);
+			
+
+			UC4Object evtObj =ae.createAndOpenObject("myEVT",fld, Template.EVNT_TIME);
+				
+		
+
+
+		}
+		
+	}
